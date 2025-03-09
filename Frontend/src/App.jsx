@@ -1,10 +1,32 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import TeamsPage from "./pages/TeamsPage";
+import AssignmentsPage from "./pages/AssignmentsPage";
+import AssignmentDetailPage from "./pages/AssignmentDetailPage";
+import ProfilePage from "./pages/ProfilePage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import CreateAssignmentPage from "./pages/CreateAssignmentPage";
+// import GradeAssignmentPage from "./pages/GradeAssignmentPage";
 
 function App() {
   return (
-    <>
-      <HomePage />
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/teams" element={<TeamsPage />} />
+        <Route path="/assignments" element={<AssignmentsPage />} />
+        <Route path="/assignments/:id" element={<AssignmentDetailPage />} />
+        <Route path="/assignments/create" element={<CreateAssignmentPage />} />
+        {/* <Route
+          path="/assignments/grade/:id"
+          element={<GradeAssignmentPage />}
+        /> */}
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+      </Routes>
+    </Router>
   );
 }
 

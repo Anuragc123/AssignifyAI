@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   FiMenu,
   FiX,
@@ -12,13 +13,24 @@ import {
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // This would be replaced with actual auth state
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const toggleLogin = () => {
-    setIsLoggedIn(!isLoggedIn); // This is just for demo purposes
+    if (isLoggedIn) {
+      setIsLoggedIn(false);
+      // In a real app, you would log the user out here
+    } else {
+      navigate("/login");
+    }
+  };
+
+  const isActive = (path) => {
+    return location.pathname === path;
   };
 
   return (
@@ -26,40 +38,52 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
               <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold text-xl">
                 A
               </div>
               <span className="ml-2 text-xl font-bold text-gray-800">
                 AssignifyAI
               </span>
-            </div>
+            </Link>
           </div>
 
           {/* Desktop menu */}
           <div className="hidden md:flex md:items-center md:space-x-6">
-            <a
-              href="#"
-              className="text-gray-600 hover:text-indigo-600 flex items-center"
+            <Link
+              to="/teams"
+              className={`flex items-center ${
+                isActive("/teams")
+                  ? "text-indigo-600"
+                  : "text-gray-600 hover:text-indigo-600"
+              }`}
             >
               <FiUsers className="mr-1" />
               Teams
-            </a>
-            <a
-              href="#"
-              className="text-gray-600 hover:text-indigo-600 flex items-center"
+            </Link>
+            <Link
+              to="/assignments"
+              className={`flex items-center ${
+                isActive("/assignments")
+                  ? "text-indigo-600"
+                  : "text-gray-600 hover:text-indigo-600"
+              }`}
             >
               <FiBook className="mr-1" />
               Assignments
-            </a>
+            </Link>
             {isLoggedIn && (
-              <a
-                href="#"
-                className="text-gray-600 hover:text-indigo-600 flex items-center"
+              <Link
+                to="/profile"
+                className={`flex items-center ${
+                  isActive("/profile")
+                    ? "text-indigo-600"
+                    : "text-gray-600 hover:text-indigo-600"
+                }`}
               >
                 <FiUser className="mr-1" />
                 Profile
-              </a>
+              </Link>
             )}
             <button
               onClick={toggleLogin}
@@ -95,37 +119,43 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a
-              href="#"
+            <Link
+              to="/teams"
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-indigo-600 hover:bg-gray-100"
+              onClick={() => setIsMenuOpen(false)}
             >
               <div className="flex items-center">
                 <FiUsers className="mr-2" />
                 Teams
               </div>
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/assignments"
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-indigo-600 hover:bg-gray-100"
+              onClick={() => setIsMenuOpen(false)}
             >
               <div className="flex items-center">
                 <FiBook className="mr-2" />
                 Assignments
               </div>
-            </a>
+            </Link>
             {isLoggedIn && (
-              <a
-                href="#"
+              <Link
+                to="/profile"
                 className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-indigo-600 hover:bg-gray-100"
+                onClick={() => setIsMenuOpen(false)}
               >
                 <div className="flex items-center">
                   <FiUser className="mr-2" />
                   Profile
                 </div>
-              </a>
+              </Link>
             )}
             <button
-              onClick={toggleLogin}
+              onClick={() => {
+                toggleLogin();
+                setIsMenuOpen(false);
+              }}
               className="w-full mt-2 px-3 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
             >
               <div className="flex items-center">
