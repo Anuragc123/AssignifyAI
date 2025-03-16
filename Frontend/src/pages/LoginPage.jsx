@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
+import { baseUrl } from "../backend-url";
+import axios from "axios";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -17,10 +20,25 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login form submitted:", formData);
+
+    try {
+      const response = await axios.post(`${baseUrl}/user/login`, formData, {
+        withCredentials: true, // Important for sending cookies
+      });
+
+      console.log("LoginPage, response:", response);
+
+      if (response.data.userAuthenticated) {
+        // dispatch(login(response.data.user));
+        console.log("User logged in successfully");
+
+        // navigate("/");
+      }
+    } catch (error) {
+      console.log("Error in LoginPage:", error.message);
+    }
   };
 
   return (

@@ -3,7 +3,7 @@ const { validateToken } = require("../services/auth");
 
 function checkForAuthCookie(cookie) {
   return (req, res, next) => {
-    const token = req.cookies[cookie];
+    const token = req.cookies?.tokenId;
     if (!token) {
       return next();
     }

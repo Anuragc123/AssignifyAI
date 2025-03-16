@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiUser,
   FiMail,
@@ -13,8 +13,11 @@ import {
   FiUpload,
   FiX,
 } from "react-icons/fi";
+import { baseUrl } from "../backend-url";
+import axios from "axios";
 
 export default function SignupPage() {
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -56,10 +59,20 @@ export default function SignupPage() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log("Signup form submitted:", formData);
+    
+    try {
+      const response = await axios.post(`${baseUrl}/user`, formData);
+
+      // console.log("RegisterPage, response:", response);
+
+      if (response.data.userCreated) {
+        navigate("/login");
+      }
+    } catch (error) {
+      console.log("Error in RegisterPage:", error.message);
+    }
   };
 
   return (
