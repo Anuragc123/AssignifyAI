@@ -1,4 +1,4 @@
-const { createTokenForUser } = require("../services/auth");
+const { createTokenForUser, validateToken } = require("../services/auth");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 
@@ -20,8 +20,11 @@ async function handleUserSignup(req, res) {
 
   console.log(password);
   if (!user) {
-    const hashedPassword = await bcrypt.hash(password, parseInt(process.env.saltRounds));
-    console.log("Signup hash=", hashedPassword );
+    const hashedPassword = await bcrypt.hash(
+      password,
+      parseInt(process.env.saltRounds)
+    );
+    console.log("Signup hash=", hashedPassword);
 
     await User.create({
       name,
@@ -58,7 +61,7 @@ async function handleUserLogin(req, res) {
   } else {
     console.log("Login attempt with:", { email, password });
     const hash = await bcrypt.hash(password, parseInt(process.env.saltRounds));
-    console.log(hash);
+    // console.log(hash);
     const match = await bcrypt.compare(password, user.password);
 
     if (match) {
@@ -83,7 +86,46 @@ async function handleUserLogin(req, res) {
   }
 }
 
+async function handleLogout(req, res) {
+  const tokenId = req.cookies?.tokenId;
+  // console.log(tokenId);
+
+  if (tokenId) {
+    res.clearCookie("tokenId");
+    res.clearCookie("data");
+  }
+
+  res.json({ success: true });
+}
+
+async function checkAuth(req, res) {
+  const tokenId = req.cookies?.tokenId;
+
+  if (!tokenId) {
+    return res.json({ success: false, error: "Not LoggedIn", StatusCode: 401 });
+  } //
+  else {
+    const user = validateToken(tokenId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+        error: "Not LoggedIn",
+        StatusCode: 401,
+      });
+    } //
+    else {
+      return res.json({
+        success: true,
+        user: { email: user.email, name: user.name },
+      });
+    }
+  }
+}
+
 module.exports = {
   handleUserSignup,
   handleUserLogin,
+  handleLogout,
+  checkAuth,
 };

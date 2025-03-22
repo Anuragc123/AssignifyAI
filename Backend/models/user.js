@@ -1,6 +1,7 @@
 const { Schema, model, default: mongoose } = require("mongoose");
 const { createHmac, randomBytes } = require("crypto");
 const { createTokenForUser } = require("../services/auth");
+require("./Team");
 
 const userSchema = new Schema(
   {

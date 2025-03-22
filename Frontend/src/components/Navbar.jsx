@@ -9,21 +9,31 @@ import {
   FiBook,
   FiUsers,
 } from "react-icons/fi";
+import axios from "axios";
+import { logout } from "../store/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { baseUrl } from "../backend-url";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // This would be replaced with actual auth state
+  
+  const isLoggedIn = useSelector((state) => state.auth.status);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const toggleLogin = () => {
+  const toggleLogin = async () => {
     if (isLoggedIn) {
-      setIsLoggedIn(false);
-      // In a real app, you would log the user out here
+      // setIsLoggedIn(false);
+      const response = await axios.get(`${baseUrl}/user/logout`, {
+        withCredentials: true,
+      });
+      console.log(response);
+      dispatch(logout());
     } else {
       navigate("/login");
     }

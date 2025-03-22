@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
@@ -11,6 +11,8 @@ import {
   FiEdit2,
   FiTrash2,
 } from "react-icons/fi";
+import axios from "axios";
+import { baseUrl } from "../backend-url";
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState([
@@ -43,6 +45,8 @@ export default function TeamsPage() {
     },
   ]);
 
+  // const [user, setUser] = useState({});
+
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -53,6 +57,17 @@ export default function TeamsPage() {
   const [teamCode, setTeamCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [showTeamCode, setShowTeamCode] = useState(false);
+
+  useEffect(() => {
+    async function getTeamsData() {
+      const response = await axios.get(`${baseUrl}/user/getTeamsData`, {
+        withCredentials: true,
+      });
+      console.log(response.data);
+    }
+
+    getTeamsData();
+  }, [teams]);
 
   // Mock user data - in a real app, this would come from authentication
   const user = {
@@ -69,7 +84,7 @@ export default function TeamsPage() {
       team.teacherName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateTeam = (e) => {
+  const handleCreateTeam = async (e) => {
     e.preventDefault();
     // In a real app, this would be an API call to create a team
     const generatedCode = Math.random()
@@ -78,23 +93,39 @@ export default function TeamsPage() {
       .toUpperCase();
 
     const newTeamData = {
+      code: generatedCode,
       id: teams.length + 1,
-      name: newTeam.name,
+      teamName: newTeam.name,
       teacherName: user.name,
       members: 1,
       createdAt: new Date().toISOString().split("T")[0],
       ownerId: user.id,
     };
 
-    setTeams([...teams, newTeamData]);
+    const response = await axios.post(
+      `${baseUrl}/user/createTeam`,
+      newTeamData,
+      {
+        withCredentials: true,
+      }
+    );
+
+    console.log("Creating Team Reponse: ", response);
+
+    // setTeams([...teams, newTeamData]);
     setTeamCode(generatedCode);
     setShowTeamCode(true);
   };
 
-  const handleJoinTeam = (e) => {
+  const handleJoinTeam = async (e) => {
     e.preventDefault();
     // In a real app, this would be an API call to join a team
-    alert(`Joining team with code: ${joinCode}`);
+    // alert(`Joining team with code: ${joinCode}`);
+    const response = await axios.post(`${baseUrl}/user/joinTeam`, {joinCode}, {
+        withCredentials: true,
+      });
+    
+    console.log("Team joining response: ", response);
     setShowJoinModal(false);
     setJoinCode("");
   };

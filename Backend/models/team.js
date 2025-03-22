@@ -1,5 +1,5 @@
-const { Schema, model } = require("mongoose");
-
+const { Schema, model, default: mongoose } = require("mongoose");
+require('./User')
 const teamSchema = new Schema(
   {
     teamCode: {
