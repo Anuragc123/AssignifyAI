@@ -1,7 +1,6 @@
 const { Schema, model, default: mongoose } = require("mongoose");
-const { createHmac, randomBytes } = require("crypto");
-const { createTokenForUser } = require("../services/auth");
-require("./Team");
+
+// require("./Team");
 
 const userSchema = new Schema(
   {
@@ -41,7 +40,7 @@ const userSchema = new Schema(
     teams: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Team",
+        ref: "team",
       },
     ],
   },

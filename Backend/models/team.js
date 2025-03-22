@@ -1,5 +1,7 @@
 const { Schema, model, default: mongoose } = require("mongoose");
-require('./User')
+// require('./User')
+// require('./assignment')
+
 const teamSchema = new Schema(
   {
     teamCode: {
@@ -13,7 +15,7 @@ const teamSchema = new Schema(
     },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true,
     },
     profilePhoto: {
@@ -22,13 +24,13 @@ const teamSchema = new Schema(
     users: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "user",
       },
     ],
     assignments: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Assignment",
+        ref: "assignment",
       },
     ],
   },

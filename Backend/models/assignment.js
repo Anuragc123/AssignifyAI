@@ -1,4 +1,5 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model, default: mongoose } = require("mongoose");
+
 
 const assignmentSchema = new Schema(
   {
@@ -12,13 +13,13 @@ const assignmentSchema = new Schema(
     },
     team: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
+      ref: "team",
       required: true,
     },
     submissions: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Submission",
+        ref: "submission",
       },
     ],
     // TODO: need to confirm this
