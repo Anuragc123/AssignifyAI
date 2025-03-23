@@ -4,6 +4,7 @@ const {
   handleUserLogin,
   handleLogout,
   checkAuth,
+  getUserDetails,
   //   handleUserDetailsUpdate,
 } = require("../controllers/user");
 
@@ -24,4 +25,6 @@ router.get("/getTeamsData", handleTeamsData);
 
 router.post("/createTeam", handleTeamCreation);
 router.post("/joinTeam", handleTeamJoin);
+
+router.get('/getUserData', getUserDetails)
 module.exports = router;

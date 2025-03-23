@@ -74,7 +74,7 @@ async function handleUserLogin(req, res) {
 
       return res.json({
         userAuthenticated: true,
-        user: { email: user.email, name: user.name },
+        user: { email: user.email, name: user.name, role: user.role },
       });
     } //
     else {
@@ -117,13 +117,37 @@ async function checkAuth(req, res) {
     else {
       return res.json({
         success: true,
-        user: { email: user.email, name: user.name },
+        user: { email: user.email, name: user.name, role: user.role },
       });
     }
   }
 }
 
+async function getUserDetails(req, res) {
+  const tokenId = req.cookies?.tokenId;
+
+  if (!tokenId) {
+    return res.json({ success: false, error: "Not LoggedIn", StatusCode: 401 });
+  } //
+  else {
+    const user = validateToken(tokenId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+        error: "Not LoggedIn",
+        StatusCode: 401,
+      });
+    } else {
+      const userData = await User.findOne({ email: user.email }).select('name email dob instituteName role contactNo profilePhoto');
+      console.log(userData);
+      return res.json({ success: true, user: userData });
+    }
+  }
+}
+
 module.exports = {
+  getUserDetails,
   handleUserSignup,
   handleUserLogin,
   handleLogout,

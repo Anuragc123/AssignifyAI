@@ -26,21 +26,18 @@ async function handleTeamsData(req, res) {
 
       //   const teamsData = await Teams.find({ _id: { $in: teamsIds } });
 
-      const teamsData = await Teams.find({ _id: { $in: teamsIds } }).populate(
+      let teamsData = await Teams.find({ _id: { $in: teamsIds } }).populate(
         "teacher",
         "name"
-      );
+      ).select("teamName teamPhoto users teacher createdAt");
 
-      //   teamsData.map((team) => team.teacher);
-
-      //   const teacherData = await User.find({
-      //     _id: { $in:  },
-      //   });
-
-      //   console.log("Teacher data",teacherData);
+    teamsData = teamsData.map((team) => ({
+      ...team.toObject(),
+      users: team.users.length,
+    }));
 
       console.log("Teams data", teamsData);
-
+      
       return res.json({
         success: true,
         teams: teamsData,
@@ -77,7 +74,8 @@ async function handleTeamCreation(req, res) {
           teamPhoto: teamPhoto,
         });
 
-        return res.json({ teamCreated: true });
+
+        return res.json({ teamCreated: true },);
       } else {
         return res.json({
           teamCreated: false,
@@ -111,7 +109,7 @@ async function handleTeamJoin(req, res) {
         if (team.users.includes(user.id)) {
           return res.json({
             teamJoined: false,
-            error: "Already a member, ek baar se dil nahi bhara kya lavde",
+            error: "Already a member",
           });
         }
 

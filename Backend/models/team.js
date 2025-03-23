@@ -18,8 +18,8 @@ const teamSchema = new Schema(
       ref: "user",
       required: true,
     },
-    profilePhoto: {
-      type: String,
+    teamPhoto: {
+      type: String || "",
     },
     users: [
       {

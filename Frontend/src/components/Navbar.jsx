@@ -34,6 +34,7 @@ export default function Navbar() {
       });
       console.log(response);
       dispatch(logout());
+      navigate("/");
     } else {
       navigate("/login");
     }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
@@ -10,18 +10,35 @@ import {
   FiSave,
   FiLock,
 } from "react-icons/fi";
+import axios from "axios";
+import { baseUrl } from "../backend-url";
 
 export default function ProfilePage() {
   const [user, setUser] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    institution: "Springfield University",
-    department: "Computer Science",
-    role: "Professor",
-    bio: "I've been teaching computer science for over 10 years with a focus on algorithms and data structures. I'm passionate about using technology to improve education.",
-    avatar: "/placeholder.svg?height=150&width=150",
+    // name: "John Doe",
+    // email: "john.doe@example.com",
+    // contactNo: "+1 (555) 123-4567",
+    // instituteName: "Springfield University",
+    // role: "Professor",
+    // // bio: "I've been teaching computer science for over 10 years with a focus on algorithms and data structures. I'm passionate about using technology to improve education.",
+    // profilePhoto: "/placeholder.svg?height=150&width=150",
   });
+
+  useEffect(() => {
+    const getUserDetails = async () => {
+      const response = await axios.get(`${baseUrl}/user/getUserData`, {
+        withCredentials: true,
+      });
+      console.log(response)
+      setUser(response.data.user);
+      setEditedUser(response.data.user);
+  
+    };
+    getUserDetails();
+  }, [])
+  
+
+  
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
@@ -76,7 +93,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col md:flex-row">
                   <div className="md:w-1/3 flex flex-col items-center mb-6 md:mb-0">
                     <img
-                      src={user.avatar || "/placeholder.svg"}
+                      src={user.profilePhoto || "/avatar.jpeg"}
                       alt={user.name}
                       className="h-32 w-32 rounded-full object-cover"
                     />
@@ -134,13 +151,13 @@ export default function ProfilePage() {
                         <input
                           type="text"
                           name="phone"
-                          value={editedUser.phone}
+                          value={editedUser.contactNo}
                           onChange={handleInputChange}
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       ) : (
                         <p className="mt-1 text-sm text-gray-900">
-                          {user.phone}
+                          {user.contactNo}
                         </p>
                       )}
                     </div>
@@ -153,17 +170,17 @@ export default function ProfilePage() {
                         <input
                           type="text"
                           name="institution"
-                          value={editedUser.institution}
+                          value={editedUser.instituteName}
                           onChange={handleInputChange}
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       ) : (
                         <p className="mt-1 text-sm text-gray-900">
-                          {user.institution}
+                          {user.instituteName}
                         </p>
                       )}
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Department
                       </label>
@@ -180,7 +197,7 @@ export default function ProfilePage() {
                           {user.department}
                         </p>
                       )}
-                    </div>
+                    </div> */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Role
@@ -199,7 +216,7 @@ export default function ProfilePage() {
                         </p>
                       )}
                     </div>
-                    <div className="md:col-span-2">
+                    {/* <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Bio
                       </label>
@@ -214,12 +231,12 @@ export default function ProfilePage() {
                       ) : (
                         <p className="mt-1 text-sm text-gray-900">{user.bio}</p>
                       )}
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
+            {/* <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 flex items-center">
                 <FiLock className="mr-2" />
                 Security
@@ -232,7 +249,7 @@ export default function ProfilePage() {
                   Two-Factor Authentication
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>

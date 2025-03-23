@@ -13,39 +13,12 @@ import {
 } from "react-icons/fi";
 import axios from "axios";
 import { baseUrl } from "../backend-url";
+import { useSelector } from "react-redux";
 
 export default function TeamsPage() {
-  const [teams, setTeams] = useState([
-    {
-      id: 1,
-      name: "Computer Science 101",
-      description: "Introduction to programming concepts",
-      teacherName: "Dr. Sarah Johnson",
-      members: 28,
-      createdAt: "2023-09-15",
-      ownerId: "teacher123", // This would match the logged-in teacher's ID
-    },
-    {
-      id: 2,
-      name: "Mathematics Advanced",
-      description: "Advanced calculus and linear algebra",
-      teacherName: "Prof. Michael Chen",
-      members: 22,
-      createdAt: "2023-09-10",
-      ownerId: "teacher456",
-    },
-    {
-      id: 3,
-      name: "Physics Lab Group",
-      description: "Experimental physics laboratory sessions",
-      teacherName: "Dr. Emily Rodriguez",
-      members: 15,
-      createdAt: "2023-09-05",
-      ownerId: "teacher789",
-    },
-  ]);
-
-  // const [user, setUser] = useState({});
+  const [teams, setTeams] = useState([]);
+  const user = useSelector((state) => state.auth.userData);
+  // console.log("User=", user);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -63,26 +36,26 @@ export default function TeamsPage() {
       const response = await axios.get(`${baseUrl}/user/getTeamsData`, {
         withCredentials: true,
       });
-      console.log(response.data);
+      // console.log("Response=", response.data);
+      if (response.data.success) {
+        setTeams((prevTeams) => [...prevTeams, ...response.data.teams]);
+      }
     }
 
     getTeamsData();
-  }, [teams]);
+    // console.log("Teams array after useEffect: ", teams);
+  }, []);
 
-  // Mock user data - in a real app, this would come from authentication
-  const user = {
-    id: "teacher123",
-    name: "Dr. Sarah Johnson",
-    role: "student", // or "student"
-  };
 
-  const isTeacher = user.role === "teacher";
+  const isTeacher = user?.role === "teacher";
+  // console.log(isTeacher);
 
-  const filteredTeams = teams.filter(
-    (team) =>
-      team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      team.teacherName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTeams = teams.filter((team) => {
+    if (searchTerm == "") return true;
+
+    return team.teamName.toLowerCase().includes(searchTerm.toLowerCase()) || team.teacher.name.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+  // console.log(filteredTeams);
 
   const handleCreateTeam = async (e) => {
     e.preventDefault();
@@ -99,7 +72,6 @@ export default function TeamsPage() {
       teacherName: user.name,
       members: 1,
       createdAt: new Date().toISOString().split("T")[0],
-      ownerId: user.id,
     };
 
     const response = await axios.post(
@@ -110,21 +82,35 @@ export default function TeamsPage() {
       }
     );
 
-    console.log("Creating Team Reponse: ", response);
+    const response2 = await axios.post(
+      `${baseUrl}/user/joinTeam`,
+      { joinCode: generatedCode },
+      {
+        withCredentials: true,
+      }
+    );
 
-    // setTeams([...teams, newTeamData]);
-    setTeamCode(generatedCode);
-    setShowTeamCode(true);
+    if (response.data.teamCreated && response2.data.teamJoined) {
+      // setTeams((prevTeams) => [...prevTeams, ...response.data.teams]);
+      setTeamCode(generatedCode);
+      setShowTeamCode(true);
+    }
+
+    console.log("Creating Team Reponse: ", response);
   };
 
   const handleJoinTeam = async (e) => {
     e.preventDefault();
     // In a real app, this would be an API call to join a team
     // alert(`Joining team with code: ${joinCode}`);
-    const response = await axios.post(`${baseUrl}/user/joinTeam`, {joinCode}, {
+    const response = await axios.post(
+      `${baseUrl}/user/joinTeam`,
+      { joinCode },
+      {
         withCredentials: true,
-      });
-    
+      }
+    );
+
     console.log("Team joining response: ", response);
     setShowJoinModal(false);
     setJoinCode("");
@@ -148,7 +134,7 @@ export default function TeamsPage() {
   };
 
   const canEditTeam = (team) => {
-    return isTeacher && team.ownerId === user.id;
+    return isTeacher && team.teacher._id === user.id;
   };
 
   return (
@@ -193,7 +179,7 @@ export default function TeamsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTeams.map((team) => (
               <div
-                key={team.id}
+                key={team._id}
                 className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-lg"
                 style={{
                   background:
@@ -206,14 +192,14 @@ export default function TeamsPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                        {team.name}
+                        {team.teamName}
                       </h3>
                       <p className="text-sm text-gray-600 mb-3">
-                        Teacher: {team.teacherName}
+                        Teacher: {team.teacher.name}
                       </p>
                       <div className="flex items-center text-sm text-gray-500">
                         <FiUsers className="mr-1" />
-                        <span>{team.members} participants</span>
+                        <span>{team.users} participants</span>
                       </div>
                     </div>
                     {canEditTeam(team) && (
@@ -337,7 +323,7 @@ export default function TeamsPage() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(teamCode);
-                      alert("Team code copied to clipboard!");
+                      // alert("Team code copied to clipboard!");
                     }}
                     className="ml-2 p-2 text-gray-500 hover:text-indigo-600"
                   >

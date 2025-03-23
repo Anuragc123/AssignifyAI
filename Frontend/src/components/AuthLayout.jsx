@@ -20,7 +20,7 @@ function Protected({ children }) {
       const response = await axios.get(`${baseUrl}/user/checkAuth`, {
         withCredentials: true, // Important for sending cookies
       });
-      console.log(response);
+      // console.log("AuthLayout=",response);
 
       if (response.data.success) {
 
