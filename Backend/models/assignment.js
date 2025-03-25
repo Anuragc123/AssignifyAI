@@ -1,6 +1,5 @@
 const { Schema, model, default: mongoose } = require("mongoose");
 
-
 const assignmentSchema = new Schema(
   {
     title: {
@@ -13,7 +12,7 @@ const assignmentSchema = new Schema(
     },
     team: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "team",
+      ref: "Team",
       required: true,
     },
     submissions: [
@@ -22,6 +21,10 @@ const assignmentSchema = new Schema(
         ref: "submission",
       },
     ],
+    points: {
+      type: Number,
+      required: true,
+    },
     // TODO: need to confirm this
     dueDate: {
       type: Date,

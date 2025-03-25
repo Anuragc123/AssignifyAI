@@ -14,6 +14,8 @@ const {
   handleTeamJoin,
 } = require("../controllers/teams");
 
+const { handleAssignmentData, handleCreateAssignment, getAssignmentDetails } = require("../controllers/assignments");
+
 const router = express.Router();
 
 router.post("/", handleUserSignup);
@@ -26,5 +28,9 @@ router.get("/getTeamsData", handleTeamsData);
 router.post("/createTeam", handleTeamCreation);
 router.post("/joinTeam", handleTeamJoin);
 
-router.get('/getUserData', getUserDetails)
+router.get("/getUserData", getUserDetails);
+
+router.get("/getAssignmentData", handleAssignmentData);
+router.post("/createAssignment", handleCreateAssignment);
+router.get("/assignment/:id", getAssignmentDetails);
 module.exports = router;

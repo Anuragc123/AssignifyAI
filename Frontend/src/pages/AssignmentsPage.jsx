@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -11,64 +11,48 @@ import {
   FiCheckCircle,
   FiAlertCircle,
 } from "react-icons/fi";
+import axios from "axios";
+import { baseUrl } from "../backend-url";
+import { useSelector } from "react-redux";
 
 export default function AssignmentsPage() {
   const navigate = useNavigate();
-  const [assignments, setAssignments] = useState([
-    {
-      id: 1,
-      title: "Essay on Modern Literature",
-      course: "English 202",
-      dueDate: "2023-11-15",
-      status: "active",
-      submissions: 18,
-      totalStudents: 28,
-    },
-    {
-      id: 2,
-      title: "Algorithm Implementation",
-      course: "Computer Science 101",
-      dueDate: "2023-11-10",
-      status: "active",
-      submissions: 15,
-      totalStudents: 30,
-    },
-    {
-      id: 3,
-      title: "Physics Problem Set",
-      course: "Physics 101",
-      dueDate: "2023-11-05",
-      status: "grading",
-      submissions: 25,
-      totalStudents: 25,
-    },
-    {
-      id: 4,
-      title: "Research Methodology",
-      course: "Research Methods",
-      dueDate: "2023-10-25",
-      status: "completed",
-      submissions: 22,
-      totalStudents: 24,
-    },
-  ]);
-
+  const [assignments, setAssignments] = useState([]);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mock user data - in a real app, this would come from authentication
-  const user = {
-    id: "teacher123",
-    name: "Dr. Sarah Johnson",
-    role: "student", // or "student"
-  };
+  const user = useSelector((state) => state.auth.userData);
+  // const user = {
+  //   id: "teacher123",
+  //   name: "Dr. Sarah Johnson",
+  //   role: "teacher",
+  // };
+
+  useEffect(() => {
+    // console.log('useeffect assignment')
+    async function getAssignmentData() {
+      try {
+        const response = await axios.get(`${baseUrl}/user/getAssignmentData`, {
+          withCredentials: true,
+        });
+
+        if (response.data.success) {
+          setAssignments(response.data.assignments);
+        }
+      } catch (error) {
+        console.error("Error fetching assignments:", error);
+      }
+    }
+
+    getAssignmentData();
+  }, []);
 
   const isTeacher = user.role === "teacher";
 
   const filteredAssignments = assignments.filter((assignment) => {
     const matchesSearch =
       assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.course.toLowerCase().includes(searchTerm.toLowerCase());
+      assignment.teamName.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (filter === "all") return matchesSearch;
     return assignment.status === filter && matchesSearch;
@@ -100,10 +84,6 @@ export default function AssignmentsPage() {
       default:
         return null;
     }
-  };
-
-  const handleAssignmentClick = (assignmentId) => {
-    navigate(`/assignments/${assignmentId}`);
   };
 
   return (
@@ -157,9 +137,9 @@ export default function AssignmentsPage() {
             <ul className="divide-y divide-gray-200">
               {filteredAssignments.map((assignment) => (
                 <li
-                  key={assignment.id}
+                  key={assignment.assignmentId}
                   className="px-6 py-4 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleAssignmentClick(assignment.id)}
+                  onClick={() => navigate(`/assignments/${assignment.assignmentId}`)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -171,18 +151,21 @@ export default function AssignmentsPage() {
                           {assignment.title}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {assignment.course}
+                          Team: {assignment.teamName}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
                       {getStatusBadge(assignment.status)}
                       <div className="text-sm text-gray-500">
-                        Due: {assignment.dueDate}
+                        Due: {assignment.dueDate} at {assignment.dueTime}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {assignment.submissions}/{assignment.totalStudents}{" "}
-                        submissions
+                        Points: {assignment.points}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Submissions: {assignment.submissionCount}/
+                        {assignment.teamMembersCount}
                       </div>
                     </div>
                   </div>

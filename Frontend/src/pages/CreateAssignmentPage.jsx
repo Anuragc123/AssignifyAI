@@ -1,79 +1,58 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import {
-  FiSave,
-  FiX,
-  FiPlus,
-  FiTrash2,
-  FiCalendar,
-  FiUsers,
-} from "react-icons/fi";
+import { FiSave, FiX, FiCalendar, FiUsers, FiClock } from "react-icons/fi";
+import axios from "axios";
+import { baseUrl } from "../backend-url";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateAssignmentPage() {
   const [assignment, setAssignment] = useState({
     title: "",
     description: "",
-    course: "",
+    teamId: "",
     dueDate: "",
+    dueTime: "",
     points: 100,
-    rubric: [
-      {
-        criteria: "Content",
-        description: "Quality and relevance of content",
-        points: 40,
-      },
-      {
-        criteria: "Structure",
-        description: "Organization and flow",
-        points: 30,
-      },
-      { criteria: "Grammar", description: "Spelling and grammar", points: 30 },
-    ],
   });
 
-  const handleInputChange = (e) => {
+  const [teams, setTeams] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchTeams() {
+      try {
+        const response = await axios.get(`${baseUrl}/user/getTeamsData`, {
+          withCredentials: true,
+        });
+        if (response.data.success) setTeams(response.data.teams);
+      } catch (error) {
+        console.error("Error fetching teams:", error);
+      }
+    }
+    fetchTeams();
+  }, []);
+
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setAssignment({
-      ...assignment,
-      [name]: value,
-    });
+    setAssignment((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRubricChange = (index, field, value) => {
-    const updatedRubric = [...assignment.rubric];
-    updatedRubric[index] = {
-      ...updatedRubric[index],
-      [field]: value,
-    };
-    setAssignment({
-      ...assignment,
-      rubric: updatedRubric,
-    });
-  };
-
-  const addRubricItem = () => {
-    setAssignment({
-      ...assignment,
-      rubric: [
-        ...assignment.rubric,
-        { criteria: "", description: "", points: 0 },
-      ],
-    });
-  };
-
-  const removeRubricItem = (index) => {
-    const updatedRubric = assignment.rubric.filter((_, i) => i !== index);
-    setAssignment({
-      ...assignment,
-      rubric: updatedRubric,
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Assignment created:", assignment);
+    try {
+      const response = await axios.post(
+        `${baseUrl}/user/createAssignment`,
+        assignment,
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Assignment created:", response.data);
+      navigate("/assignments");
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+    }
   };
 
   return (
@@ -87,20 +66,16 @@ export default function CreateAssignmentPage() {
             </h1>
             <div className="flex space-x-2">
               <button
-                type="button"
                 onClick={() => window.history.back()}
                 className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 flex items-center"
               >
-                <FiX className="mr-2" />
-                Cancel
+                <FiX className="mr-2" /> Cancel
               </button>
               <button
-                type="button"
                 onClick={handleSubmit}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center"
               >
-                <FiSave className="mr-2" />
-                Save Assignment
+                <FiSave className="mr-2" /> Save Assignment
               </button>
             </div>
           </div>
@@ -121,9 +96,9 @@ export default function CreateAssignmentPage() {
                       name="title"
                       id="title"
                       required
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
                       value={assignment.title}
-                      onChange={handleInputChange}
+                      onChange={handleChange}
                     />
                   </div>
 
@@ -138,31 +113,39 @@ export default function CreateAssignmentPage() {
                       id="description"
                       name="description"
                       rows={4}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
                       value={assignment.description}
-                      onChange={handleInputChange}
+                      onChange={handleChange}
                     />
                   </div>
 
                   <div>
                     <label
-                      htmlFor="course"
+                      htmlFor="teamId"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Course
+                      Team
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <FiUsers className="text-gray-400" />
                       </div>
-                      <input
-                        type="text"
-                        name="course"
-                        id="course"
-                        className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        value={assignment.course}
-                        onChange={handleInputChange}
-                      />
+                      <select
+                        name="teamId"
+                        id="teamId"
+                        className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
+                        value={assignment.teamId}
+                        onChange={handleChange}
+                      >
+                        <option value="" disabled>
+                          Select a Team
+                        </option>
+                        {teams.map((team) => (
+                          <option key={team._id} value={team._id}>
+                            {team.teamName}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -181,9 +164,31 @@ export default function CreateAssignmentPage() {
                         type="date"
                         name="dueDate"
                         id="dueDate"
-                        className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
                         value={assignment.dueDate}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="dueTime"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Due Time
+                    </label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiClock className="text-gray-400" />
+                      </div>
+                      <input
+                        type="time"
+                        name="dueTime"
+                        id="dueTime"
+                        className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
+                        value={assignment.dueTime}
+                        onChange={handleChange}
                       />
                     </div>
                   </div>
@@ -200,152 +205,10 @@ export default function CreateAssignmentPage() {
                       name="points"
                       id="points"
                       min="0"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
                       value={assignment.points}
-                      onChange={handleInputChange}
+                      onChange={handleChange}
                     />
-                  </div>
-                </div>
-
-                <div className="mt-8">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Grading Rubric
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={addRubricItem}
-                      className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md text-sm font-medium hover:bg-indigo-200 flex items-center"
-                    >
-                      <FiPlus className="mr-1" />
-                      Add Criteria
-                    </button>
-                  </div>
-
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-sm text-gray-700">
-                      <div className="col-span-4">Criteria</div>
-                      <div className="col-span-6">Description</div>
-                      <div className="col-span-2">Points</div>
-                    </div>
-
-                    {assignment.rubric.map((item, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-12 gap-4 mb-4 items-center"
-                      >
-                        <div className="col-span-4">
-                          <input
-                            type="text"
-                            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            value={item.criteria}
-                            onChange={(e) =>
-                              handleRubricChange(
-                                index,
-                                "criteria",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-span-6">
-                          <input
-                            type="text"
-                            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            value={item.description}
-                            onChange={(e) =>
-                              handleRubricChange(
-                                index,
-                                "description",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <input
-                            type="number"
-                            min="0"
-                            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            value={item.points}
-                            onChange={(e) =>
-                              handleRubricChange(
-                                index,
-                                "points",
-                                Number.parseInt(e.target.value) || 0
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="col-span-1 flex justify-center">
-                          <button
-                            type="button"
-                            onClick={() => removeRubricItem(index)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <FiTrash2 />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-8">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    AI Grading Settings
-                  </h3>
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <div className="mb-4">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                          defaultChecked
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Enable AI-assisted grading
-                        </span>
-                      </label>
-                      <p className="mt-1 text-sm text-gray-500">
-                        AssignifyAI will automatically grade submissions based
-                        on your rubric and provide feedback to students.
-                      </p>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                          defaultChecked
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Generate personalized feedback
-                        </span>
-                      </label>
-                      <p className="mt-1 text-sm text-gray-500">
-                        AI will provide customized feedback for each student
-                        based on their submission.
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                          defaultChecked
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Require teacher approval before releasing grades
-                        </span>
-                      </label>
-                      <p className="mt-1 text-sm text-gray-500">
-                        You'll be able to review and adjust AI-generated grades
-                        before they're released to students.
-                      </p>
-                    </div>
                   </div>
                 </div>
               </form>

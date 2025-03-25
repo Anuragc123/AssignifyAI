@@ -26,18 +26,17 @@ async function handleTeamsData(req, res) {
 
       //   const teamsData = await Teams.find({ _id: { $in: teamsIds } });
 
-      let teamsData = await Teams.find({ _id: { $in: teamsIds } }).populate(
-        "teacher",
-        "name"
-      ).select("teamName teamPhoto users teacher createdAt");
+      let teamsData = await Teams.find({ _id: { $in: teamsIds } })
+        .populate("teacher", "name")
+        .select("teamName teamPhoto users teacher createdAt");
 
-    teamsData = teamsData.map((team) => ({
-      ...team.toObject(),
-      users: team.users.length,
-    }));
+      teamsData = teamsData.map((team) => ({
+        ...team.toObject(),
+        users: team.users.length,
+      }));
 
       console.log("Teams data", teamsData);
-      
+
       return res.json({
         success: true,
         teams: teamsData,
@@ -74,8 +73,7 @@ async function handleTeamCreation(req, res) {
           teamPhoto: teamPhoto,
         });
 
-
-        return res.json({ teamCreated: true },);
+        return res.json({ teamCreated: true });
       } else {
         return res.json({
           teamCreated: false,

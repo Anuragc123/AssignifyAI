@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -11,6 +11,8 @@ import {
   FiTrash2,
   FiCheckCircle,
 } from "react-icons/fi";
+import axios from "axios";
+import { baseUrl } from "../backend-url";
 
 export default function AssignmentDetailPage() {
   const { id } = useParams();
@@ -25,32 +27,30 @@ export default function AssignmentDetailPage() {
 
   const isStudent = user.role === "student";
 
-  // Mock assignment data - in a real app, this would be fetched from an API
   const [assignment, setAssignment] = useState({
-    id: Number.parseInt(id),
-    title: "Essay on Modern Literature",
-    description:
-      "Write a 1000-word essay analyzing the themes and techniques used in modern literature. Focus on at least two authors from the reading list and compare their approaches.",
-    course: "English 202",
-    dueDate: "2023-11-15T23:59:59",
-    points: 100,
-    status: "active",
-    instructions: [
-      "Your essay should be 1000-1500 words in length.",
-      "Include proper citations using MLA format.",
-      "Submit your work as a PDF or Word document.",
-      "Plagiarism will result in a zero grade.",
-    ],
-    resources: [
-      { name: "Reading List", url: "#" },
-      { name: "MLA Citation Guide", url: "#" },
-      { name: "Grading Rubric", url: "#" },
-    ],
+   
   });
 
   const [files, setFiles] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function fetchAssignment() {
+      try {
+        const response = await axios.get(`${baseUrl}/user/assignment/${id}`, {
+          withCredentials: true,
+        });
+        if (response.data.success) {
+          console.log("response=", response.data);
+          setAssignment(response.data.assignment);
+        }
+      } catch (error) {
+        console.error("Error fetching assignment:", error);
+      }
+    }
+    fetchAssignment();
+  }, [id]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -80,12 +80,19 @@ export default function AssignmentDetailPage() {
     }, 1500);
   };
 
-  // Calculate time remaining
-  const now = new Date();
-  const dueDate = new Date(assignment.dueDate);
-  const timeRemaining = dueDate - now;
+  
 
   const formatTimeRemaining = () => {
+
+    const now = new Date();
+    const dueDate = new Date(assignment.dueDate);
+    // console.log("assignment.dueDate=", assignment.dueTime);
+    // const [hrs, mins] = assignment.dueTime.split(":").map(Number);
+
+    // Set dueTime on dueDate
+    // dueDate.setHours(hrs, mins, 0, 0);
+    const timeRemaining = dueDate - now;
+
     if (timeRemaining <= 0) {
       return "Past due";
     }
@@ -149,7 +156,7 @@ export default function AssignmentDetailPage() {
                 </h2>
                 <p className="text-gray-700 mb-6">{assignment.description}</p>
 
-                <h2 className="text-lg font-medium text-gray-900 mb-2">
+                {/* <h2 className="text-lg font-medium text-gray-900 mb-2">
                   Instructions
                 </h2>
                 <ul className="list-disc pl-5 mb-6">
@@ -158,9 +165,9 @@ export default function AssignmentDetailPage() {
                       {instruction}
                     </li>
                   ))}
-                </ul>
+                </ul> */}
 
-                <h2 className="text-lg font-medium text-gray-900 mb-2">
+                {/* <h2 className="text-lg font-medium text-gray-900 mb-2">
                   Resources
                 </h2>
                 <ul className="mb-6">
@@ -176,7 +183,7 @@ export default function AssignmentDetailPage() {
                       </a>
                     </li>
                   ))}
-                </ul>
+                </ul> */}
               </div>
 
               {isStudent && (

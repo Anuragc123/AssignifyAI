@@ -30,7 +30,7 @@ const teamSchema = new Schema(
     assignments: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "assignment",
+        ref: "Assignment",
       },
     ],
   },
