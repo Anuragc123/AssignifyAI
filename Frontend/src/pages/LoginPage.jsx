@@ -5,6 +5,7 @@ import { baseUrl } from "../backend-url";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../store/authSlice";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -45,11 +46,14 @@ export default function LoginPage() {
       if (response.data.userAuthenticated) {
         dispatch(login(response.data.user));
         console.log("User logged in successfully");
+        toast.success("User logged in successfully");
 
         navigate("/");
       }
     } catch (error) {
+      
       console.log("Error in LoginPage:", error.message);
+      toast.error(error.message);
     }
   };
 

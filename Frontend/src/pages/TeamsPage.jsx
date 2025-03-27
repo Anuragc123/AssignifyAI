@@ -14,6 +14,7 @@ import {
 import axios from "axios";
 import { baseUrl } from "../backend-url";
 import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState([]);
@@ -38,13 +39,13 @@ export default function TeamsPage() {
       });
       // console.log("Response=", response.data);
       if (response.data.success) {
-        setTeams((prevTeams) => [...prevTeams, ...response.data.teams]);
+        setTeams(response.data.teams);
       }
     }
 
     getTeamsData();
     // console.log("Teams array after useEffect: ", teams);
-  }, []);
+  }, [showJoinModal]);
 
 
   const isTeacher = user?.role === "teacher";
@@ -91,18 +92,19 @@ export default function TeamsPage() {
     );
 
     if (response.data.teamCreated && response2.data.teamJoined) {
+      toast.success("Team created successfully!");
       // setTeams((prevTeams) => [...prevTeams, ...response.data.teams]);
       setTeamCode(generatedCode);
       setShowTeamCode(true);
     }
+
 
     console.log("Creating Team Reponse: ", response);
   };
 
   const handleJoinTeam = async (e) => {
     e.preventDefault();
-    // In a real app, this would be an API call to join a team
-    // alert(`Joining team with code: ${joinCode}`);
+   
     const response = await axios.post(
       `${baseUrl}/user/joinTeam`,
       { joinCode },
@@ -110,6 +112,14 @@ export default function TeamsPage() {
         withCredentials: true,
       }
     );
+
+    if (response.data.teamJoined) {
+      toast.success("Team joined successfully!");
+      // setTeams((prevTeams) => [...prevTeams, ...response.data.teams]);
+    }
+    else {
+      toast.error("Invalid join code!");
+    }
 
     console.log("Team joining response: ", response);
     setShowJoinModal(false);

@@ -121,8 +121,8 @@ async function handleTeamJoin(req, res) {
         return res.json({ teamJoined: true });
       } else {
         return res.json({
-          teamCreated: false,
-          error: "Team with given code does not exists",
+          teamJoined: false,
+          error: "Invalid Join Code",
         });
       }
     }

@@ -41,10 +41,11 @@ async function handleAssignmentData(req, res) {
           teamName: team.teamName,
           teamMembersCount: team.users.length,
           submissionCount: assignment.submissions.length,
+          status: "active",
         }))
       );
 
-      console.log("assignmentsData=", assignmentsData);
+      // console.log("assignmentsData=", assignmentsData);
 
       return res.json({
         success: true,
@@ -140,7 +141,7 @@ async function getAssignmentDetails(req, res) {
       });
     } else {
       const { id } = req.params;
-      console.log("assignmentId=", id);
+      // console.log("assignmentId=", id);
       const objectId = new mongoose.Types.ObjectId(id);
 
       const assignment = await Assignment.findOne({ _id: objectId }).populate(
@@ -161,8 +162,41 @@ async function getAssignmentDetails(req, res) {
           status: "active",
           submissionsCount: assignment.submissions.length,
         };
-        console.log("formattedAssignment=", formattedAssignment);
+        // console.log("formattedAssignment=", formattedAssignment);
         return res.json({ success: true, assignment: formattedAssignment });
+      }
+
+      return res.json({ success: false, error: "Assignment not found" });
+    }
+  }
+}
+
+async function deleteAssignment(req, res) {
+  const tokenId = req.cookies?.tokenId;
+
+  if (!tokenId) {
+    return res.json({ success: false, error: "Not LoggedIn", StatusCode: 401 });
+  } //
+  else {
+    const user = validateToken(tokenId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+        error: "Not LoggedIn",
+        StatusCode: 401,
+      });
+    } else {
+      const { id } = req.params;
+      // console.log("assignmentId=", id);
+      const objectId = new mongoose.Types.ObjectId(id);
+
+      const assignment= await Assignment.findOneAndDelete({ _id: objectId });
+
+      // console.log("assignment=", assignment);
+
+      if (assignment) {
+        return res.json({ success: true });
       }
 
       return res.json({ success: false, error: "Assignment not found" });
@@ -174,4 +208,5 @@ module.exports = {
   handleAssignmentData,
   handleCreateAssignment,
   getAssignmentDetails,
+  deleteAssignment,
 };

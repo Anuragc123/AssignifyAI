@@ -22,11 +22,6 @@ export default function AssignmentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const user = useSelector((state) => state.auth.userData);
-  // const user = {
-  //   id: "teacher123",
-  //   name: "Dr. Sarah Johnson",
-  //   role: "teacher",
-  // };
 
   useEffect(() => {
     // console.log('useeffect assignment')
@@ -139,7 +134,9 @@ export default function AssignmentsPage() {
                 <li
                   key={assignment.assignmentId}
                   className="px-6 py-4 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(`/assignments/${assignment.assignmentId}`)}
+                  onClick={() =>
+                    navigate(`/assignments/${assignment.assignmentId}`)
+                  }
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">

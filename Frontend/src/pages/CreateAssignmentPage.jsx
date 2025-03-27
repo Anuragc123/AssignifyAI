@@ -5,6 +5,7 @@ import { FiSave, FiX, FiCalendar, FiUsers, FiClock } from "react-icons/fi";
 import axios from "axios";
 import { baseUrl } from "../backend-url";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function CreateAssignmentPage() {
   const [assignment, setAssignment] = useState({
@@ -25,13 +26,23 @@ export default function CreateAssignmentPage() {
         const response = await axios.get(`${baseUrl}/user/getTeamsData`, {
           withCredentials: true,
         });
-        if (response.data.success) setTeams(response.data.teams);
+        if (response.data.success) {
+          setTeams(response.data.teams);
+        }
       } catch (error) {
         console.error("Error fetching teams:", error);
       }
     }
     fetchTeams();
   }, []);
+
+  const getCurrentDate = () => {
+    return new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+  };
+
+  const getCurrentTime = () => {
+    return new Date().toTimeString().slice(0, 5); // Format: HH:MM
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,8 +60,10 @@ export default function CreateAssignmentPage() {
         }
       );
       console.log("Assignment created:", response.data);
+      toast.success("Assignment created successfully.");
       navigate("/assignments");
     } catch (error) {
+      toast.error("Failed to create assignment. Please try again.");
       console.error("Error creating assignment:", error);
     }
   };
@@ -164,6 +177,7 @@ export default function CreateAssignmentPage() {
                         type="date"
                         name="dueDate"
                         id="dueDate"
+                        min={getCurrentDate()} // Restrict past dates
                         className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
                         value={assignment.dueDate}
                         onChange={handleChange}
@@ -186,6 +200,11 @@ export default function CreateAssignmentPage() {
                         type="time"
                         name="dueTime"
                         id="dueTime"
+                        min={
+                          assignment.dueDate === getCurrentDate()
+                            ? getCurrentTime()
+                            : undefined
+                        } // Restrict past times for today
                         className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
                         value={assignment.dueTime}
                         onChange={handleChange}

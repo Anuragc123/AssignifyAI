@@ -14,31 +14,19 @@ import axios from "axios";
 import { baseUrl } from "../backend-url";
 
 export default function ProfilePage() {
-  const [user, setUser] = useState({
-    // name: "John Doe",
-    // email: "john.doe@example.com",
-    // contactNo: "+1 (555) 123-4567",
-    // instituteName: "Springfield University",
-    // role: "Professor",
-    // // bio: "I've been teaching computer science for over 10 years with a focus on algorithms and data structures. I'm passionate about using technology to improve education.",
-    // profilePhoto: "/placeholder.svg?height=150&width=150",
-  });
+  const [user, setUser] = useState({});
 
   useEffect(() => {
     const getUserDetails = async () => {
       const response = await axios.get(`${baseUrl}/user/getUserData`, {
         withCredentials: true,
       });
-      console.log(response)
+      console.log(response);
       setUser(response.data.user);
       setEditedUser(response.data.user);
-  
     };
     getUserDetails();
-  }, [])
-  
-
-  
+  }, []);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);

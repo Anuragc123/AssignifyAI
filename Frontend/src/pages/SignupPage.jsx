@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { baseUrl } from "../backend-url";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -68,9 +69,11 @@ export default function SignupPage() {
       // console.log("RegisterPage, response:", response);
 
       if (response.data.userCreated) {
+        toast.success("Registration successful! Please login.");
         navigate("/login");
       }
     } catch (error) {
+      toast.error("Registration failed. Please try again.");
       console.log("Error in RegisterPage:", error.message);
     }
   };
