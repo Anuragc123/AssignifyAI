@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import { useEffect, useState, useRef } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import {
@@ -9,27 +11,44 @@ import {
   FiEdit,
   FiSave,
   FiLock,
+  FiCamera,
+  FiBriefcase,
+  FiX,
+  FiLoader,
+  FiAlertCircle,
 } from "react-icons/fi";
 import axios from "axios";
 import { baseUrl } from "../backend-url";
 
 export default function ProfilePage() {
   const [user, setUser] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedUser, setEditedUser] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const getUserDetails = async () => {
-      const response = await axios.get(`${baseUrl}/user/getUserData`, {
-        withCredentials: true,
-      });
-      console.log(response);
-      setUser(response.data.user);
-      setEditedUser(response.data.user);
+      try {
+        setLoading(true);
+        const response = await axios.get(`${baseUrl}/user/getUserData`, {
+          withCredentials: true,
+        });
+        setUser(response.data.user);
+        setEditedUser(response.data.user);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError("Failed to load profile data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
     };
     getUserDetails();
   }, []);
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState(user);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,205 +58,326 @@ export default function ProfilePage() {
     });
   };
 
-  const handleSave = () => {
-    setUser(editedUser);
-    setIsEditing(false);
+  const handlePhotoChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        setPhotoPreview(e.target.result);
+        // In a real implementation, you would handle the file upload here
+        // and update the editedUser state with the new photo
+      };
+
+      reader.readAsDataURL(file);
+    }
   };
 
-  return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white shadow overflow-hidden rounded-lg">
-            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Profile Information
-                </h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                  Personal details and preferences
-                </p>
-              </div>
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      const response = await axios.post(`${baseUrl}/user/update`, editedUser, {
+        withCredentials: true,
+      })
+
+      setUser(editedUser);
+      setIsEditing(false);
+      setPhotoPreview(null);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedUser(user);
+    setIsEditing(false);
+    setPhotoPreview(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 flex items-center justify-center">
+          <div className="text-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your profile...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow bg-gray-50 flex items-center justify-center">
+          <div className="text-center p-8 max-w-md">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <FiAlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-red-700 mb-2">
+                Error Loading Profile
+              </h2>
+              <p className="text-red-600 mb-4">{error}</p>
               <button
-                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
-                className="px-4 py-2 flex items-center text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
-                {isEditing ? (
-                  <>
-                    <FiSave className="mr-2" />
-                    Save
-                  </>
-                ) : (
-                  <>
-                    <FiEdit className="mr-2" />
-                    Edit
-                  </>
-                )}
+                Try Again
               </button>
             </div>
-            <div className="border-t border-gray-200">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex flex-col md:flex-row">
-                  <div className="md:w-1/3 flex flex-col items-center mb-6 md:mb-0">
-                    <img
-                      src={user.profilePhoto || "/avatar.jpeg"}
-                      alt={user.name}
-                      className="h-32 w-32 rounded-full object-cover"
-                    />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <Navbar />
+      <main className="flex-grow py-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Page header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage your personal information and account settings
+            </p>
+          </div>
+
+          {/* Profile card */}
+          <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-100">
+            {/* Header with actions */}
+            <div className="px-6 py-5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-200 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Profile Information
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Your personal details visible to others
+                </p>
+              </div>
+              <div className="flex space-x-3">
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={handleCancel}
+                      className="px-4 py-2 flex items-center text-sm font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                      disabled={saving}
+                    >
+                      <FiX className="mr-2" />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="px-4 py-2 flex items-center text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                      disabled={saving}
+                    >
+                      {saving ? (
+                        <>
+                          <FiLoader className="mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <FiSave className="mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 flex items-center text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                  >
+                    <FiEdit className="mr-2" />
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Profile content */}
+            <div className="p-6">
+              <div className="flex flex-col lg:flex-row gap-8">
+                {/* Profile photo section */}
+                <div className="lg:w-1/3 flex flex-col items-center">
+                  <div className="relative group">
+                    <div className="h-40 w-40 rounded-full overflow-hidden border-4 border-white shadow-md">
+                      <img
+                        src={
+                          photoPreview || user.profilePhoto || "/avatar.jpeg"
+                        }
+                        alt={user.name || "Profile"}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+
                     {isEditing && (
-                      <button className="mt-4 px-3 py-1 text-sm text-indigo-600 border border-indigo-600 rounded-md hover:bg-indigo-50">
-                        Change Photo
-                      </button>
+                      <div
+                        className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full cursor-pointer"
+                        onClick={() => fileInputRef.current.click()}
+                      >
+                        <FiCamera className="h-8 w-8 text-white" />
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handlePhotoChange}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                      </div>
                     )}
                   </div>
-                  <div className="md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <FiUser className="mr-2" />
+
+                  <div className="mt-4 text-center">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {user.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 capitalize">
+                        {user.role}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Profile details section */}
+                <div className="lg:w-2/3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Full Name */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <FiUser className="mr-2 text-indigo-500" />
                         Full Name
                       </label>
                       {isEditing ? (
                         <input
                           type="text"
                           name="name"
-                          value={editedUser.name}
+                          value={editedUser.name || ""}
                           onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                          placeholder="Enter your full name"
                         />
                       ) : (
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.name}
-                        </p>
+                        <div className="px-4 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                          <p className="text-gray-900">
+                            {user.name || "Not provided"}
+                          </p>
+                        </div>
                       )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <FiMail className="mr-2" />
-                        Email
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <FiMail className="mr-2 text-indigo-500" />
+                        Email Address
                       </label>
                       {isEditing ? (
                         <input
                           type="email"
                           name="email"
-                          value={editedUser.email}
+                          value={editedUser.email || ""}
                           onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                          placeholder="Enter your email"
                         />
                       ) : (
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.email}
-                        </p>
+                        <div className="px-4 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                          <p className="text-gray-900">
+                            {user.email || "Not provided"}
+                          </p>
+                        </div>
                       )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <FiPhone className="mr-2" />
-                        Phone
+
+                    {/* Phone */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <FiPhone className="mr-2 text-indigo-500" />
+                        Phone Number
                       </label>
                       {isEditing ? (
                         <input
                           type="text"
-                          name="phone"
-                          value={editedUser.contactNo}
+                          name="contactNo"
+                          value={editedUser.contactNo || ""}
                           onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                          placeholder="Enter your phone number"
                         />
                       ) : (
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.contactNo}
-                        </p>
+                        <div className="px-4 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                          <p className="text-gray-900">
+                            {user.contactNo || "Not provided"}
+                          </p>
+                        </div>
                       )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <FiMapPin className="mr-2" />
+
+                    {/* Institution */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <FiMapPin className="mr-2 text-indigo-500" />
                         Institution
                       </label>
                       {isEditing ? (
                         <input
                           type="text"
-                          name="institution"
-                          value={editedUser.instituteName}
+                          name="instituteName"
+                          value={editedUser.instituteName || ""}
                           onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                          placeholder="Enter your institution"
                         />
                       ) : (
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.instituteName}
-                        </p>
+                        <div className="px-4 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                          <p className="text-gray-900">
+                            {user.instituteName || "Not provided"}
+                          </p>
+                        </div>
                       )}
                     </div>
-                    {/* <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Department
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="department"
-                          value={editedUser.department}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      ) : (
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.department}
-                        </p>
-                      )}
-                    </div> */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+
+                    {/* Role */}
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-gray-700">
+                        <FiBriefcase className="mr-2 text-indigo-500" />
                         Role
                       </label>
                       {isEditing ? (
-                        <input
-                          type="text"
+                        <select
                           name="role"
-                          value={editedUser.role}
+                          value={editedUser.role || ""}
                           onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                        >
+                          <option value="student">Student</option>
+                          <option value="teacher">Teacher</option>
+                          <option value="admin">Administrator</option>
+                        </select>
                       ) : (
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.role}
-                        </p>
+                        <div className="px-4 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                          <p className="text-gray-900 capitalize">
+                            {user.role || "Not provided"}
+                          </p>
+                        </div>
                       )}
                     </div>
-                    {/* <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Bio
-                      </label>
-                      {isEditing ? (
-                        <textarea
-                          name="bio"
-                          rows={3}
-                          value={editedUser.bio}
-                          onChange={handleInputChange}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      ) : (
-                        <p className="mt-1 text-sm text-gray-900">{user.bio}</p>
-                      )}
-                    </div> */}
                   </div>
                 </div>
               </div>
             </div>
-            {/* <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 flex items-center">
-                <FiLock className="mr-2" />
-                Security
-              </h3>
-              <div className="space-y-4">
-                <button className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                  Change Password
-                </button>
-                <button className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 ml-4">
-                  Two-Factor Authentication
-                </button>
-              </div>
-            </div> */}
           </div>
         </div>
       </main>

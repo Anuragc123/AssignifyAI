@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -44,13 +46,50 @@ export default function CreateAssignmentPage() {
     return new Date().toTimeString().slice(0, 5); // Format: HH:MM
   };
 
+  const validateDateTime = (date, time) => {
+    if (!date || !time) return true;
+
+    const now = new Date();
+    const selectedDateTime = new Date(`${date}T${time}`);
+
+    return selectedDateTime > now;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setAssignment((prev) => ({ ...prev, [name]: value }));
+
+    // Create a new assignment state with the updated field
+    const updatedAssignment = { ...assignment, [name]: value };
+
+    // If changing date or time, validate the combination
+    if (name === "dueDate" || name === "dueTime") {
+      const isValid = validateDateTime(
+        name === "dueDate" ? value : updatedAssignment.dueDate,
+        name === "dueTime" ? value : updatedAssignment.dueTime
+      );
+
+      // If invalid and both fields have values, reset the time if date is today
+      if (!isValid && updatedAssignment.dueDate && updatedAssignment.dueTime) {
+        if (updatedAssignment.dueDate === getCurrentDate()) {
+          // If date is today and time is invalid, reset time to current time
+          updatedAssignment.dueTime = getCurrentTime();
+          toast.error("Due time must be in the future");
+        }
+      }
+    }
+
+    setAssignment(updatedAssignment);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate date and time before submission
+    if (!validateDateTime(assignment.dueDate, assignment.dueTime)) {
+      toast.error("Due date and time must be in the future");
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${baseUrl}/user/createAssignment`,
@@ -200,14 +239,14 @@ export default function CreateAssignmentPage() {
                         type="time"
                         name="dueTime"
                         id="dueTime"
+                        className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
+                        value={assignment.dueTime}
+                        onChange={handleChange}
                         min={
                           assignment.dueDate === getCurrentDate()
                             ? getCurrentTime()
                             : undefined
-                        } // Restrict past times for today
-                        className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
-                        value={assignment.dueTime}
-                        onChange={handleChange}
+                        }
                       />
                     </div>
                   </div>

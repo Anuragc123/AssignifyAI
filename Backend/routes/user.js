@@ -5,7 +5,7 @@ const {
   handleLogout,
   checkAuth,
   getUserDetails,
-  //   handleUserDetailsUpdate,
+  updateUserDetails,
 } = require("../controllers/user");
 
 const {
@@ -14,14 +14,19 @@ const {
   handleTeamJoin,
 } = require("../controllers/teams");
 
-const { handleAssignmentData, handleCreateAssignment, getAssignmentDetails, deleteAssignment } = require("../controllers/assignments");
+const {
+  handleAssignmentData,
+  handleCreateAssignment,
+  getAssignmentDetails,
+  deleteAssignment,
+} = require("../controllers/assignments");
 
 const router = express.Router();
 
 router.post("/", handleUserSignup);
 router.post("/login", handleUserLogin);
 router.get("/logout", handleLogout);
-// router.post("/update", handleUserDetailsUpdate);
+router.post("/update", updateUserDetails);
 router.get("/checkAuth", checkAuth);
 router.get("/getTeamsData", handleTeamsData);
 
@@ -34,4 +39,5 @@ router.get("/getAssignmentData", handleAssignmentData);
 router.post("/createAssignment", handleCreateAssignment);
 router.get("/assignment/:id", getAssignmentDetails);
 router.delete("/assignment/:id", deleteAssignment);
+
 module.exports = router;

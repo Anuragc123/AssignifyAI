@@ -139,8 +139,45 @@ async function getUserDetails(req, res) {
         StatusCode: 401,
       });
     } else {
-      const userData = await User.findOne({ email: user.email }).select('name email dob instituteName role contactNo profilePhoto');
+      const userData = await User.findOne({ email: user.email }).select(
+        "name email dob instituteName role contactNo profilePhoto"
+      );
       console.log(userData);
+      return res.json({ success: true, user: userData });
+    }
+  }
+}
+
+async function updateUserDetails(req, res) {
+  const tokenId = req.cookies?.tokenId;
+
+  if (!tokenId) {
+    return res.json({ success: false, error: "Not LoggedIn", StatusCode: 401 });
+  } //
+  else {
+    const user = validateToken(tokenId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+        error: "Not LoggedIn",
+        StatusCode: 401,
+      });
+    } else {
+      const { name, email, dob, instituteName, contactNo, profilePhoto } =
+        req.body;
+
+        console.log(req.body)
+
+      const userData = await User.findOneAndUpdate(
+        { email: user.email },
+        { name, email, dob, instituteName, contactNo, profilePhoto },
+        { new: true }
+      ).select("name email dob instituteName role contactNo profilePhoto");
+
+      if (!userData) {
+        return res.json({ success: false, error: "User not found" });
+      }
       return res.json({ success: true, user: userData });
     }
   }
@@ -152,4 +189,5 @@ module.exports = {
   handleUserLogin,
   handleLogout,
   checkAuth,
+  updateUserDetails,
 };
