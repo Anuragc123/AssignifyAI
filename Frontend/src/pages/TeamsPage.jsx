@@ -47,14 +47,16 @@ export default function TeamsPage() {
     // console.log("Teams array after useEffect: ", teams);
   }, [showJoinModal]);
 
-
   const isTeacher = user?.role === "teacher";
   // console.log(isTeacher);
 
   const filteredTeams = teams.filter((team) => {
     if (searchTerm == "") return true;
 
-    return team.teamName.toLowerCase().includes(searchTerm.toLowerCase()) || team.teacher.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return (
+      team.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      team.teacher.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
   // console.log(filteredTeams);
 
@@ -91,20 +93,20 @@ export default function TeamsPage() {
       }
     );
 
+    console.log("Response2", response2.data);
     if (response.data.teamCreated && response2.data.teamJoined) {
       toast.success("Team created successfully!");
-      // setTeams((prevTeams) => [...prevTeams, ...response.data.teams]);
+      setTeams((prevTeams) => [...prevTeams, response2.data.teamData]);
       setTeamCode(generatedCode);
       setShowTeamCode(true);
     }
 
-
-    console.log("Creating Team Reponse: ", response);
+    // console.log("Creating Team Reponse: ", response2);
   };
 
   const handleJoinTeam = async (e) => {
     e.preventDefault();
-   
+
     const response = await axios.post(
       `${baseUrl}/user/joinTeam`,
       { joinCode },
@@ -116,8 +118,7 @@ export default function TeamsPage() {
     if (response.data.teamJoined) {
       toast.success("Team joined successfully!");
       // setTeams((prevTeams) => [...prevTeams, ...response.data.teams]);
-    }
-    else {
+    } else {
       toast.error("Invalid join code!");
     }
 

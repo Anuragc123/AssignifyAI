@@ -118,7 +118,18 @@ async function handleTeamJoin(req, res) {
 
         await User.updateOne({ _id: user.id }, { $push: { teams: team._id } });
 
-        return res.json({ teamJoined: true });
+        let teamData = await Teams.findOne({ teamCode: joinCode })
+          .populate("teacher", "name")
+          .select("teamName teamPhoto users teacher createdAt");
+
+        teamData = {
+          ...teamData.toObject(),
+          users: teamData.users.length,
+        };
+
+        console.log("TeamData=", teamData);
+
+        return res.json({ teamJoined: true, teamData: teamData });
       } else {
         return res.json({
           teamJoined: false,
