@@ -50,6 +50,9 @@ export default function LoginPage() {
 
         navigate("/");
       }
+      else{
+        toast.error("Login failed: " + response.data.error);
+      }
     } catch (error) {
       
       console.log("Error in LoginPage:", error.message);

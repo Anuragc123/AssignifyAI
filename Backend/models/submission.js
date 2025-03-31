@@ -8,16 +8,25 @@ const submissionSchema = new Schema(
       ref: "user",
       required: true,
     },
-    // TODO: discuss about how to get fileID
-    fileId: {
-      type: String,
+    assignment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Assignment",
       required: true,
     },
-    marks: {
+    // TODO: discuss about how to get fileID
+    fileIds: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+    points: {
       type: Number,
+      default: 100,
     },
     feedback: {
       type: String,
+      default: "",
     },
     // TODO: do we need to combine date and time?
     submitDate: {

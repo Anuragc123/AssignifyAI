@@ -19,6 +19,7 @@ import {
 import axios from "axios";
 import { baseUrl } from "../backend-url";
 import { useSelector } from "react-redux";
+import FilePreviewModal from "../components/FilePreview";
 
 export default function AssignmentDetailPage() {
   const { id } = useParams();
@@ -36,6 +37,7 @@ export default function AssignmentDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchAssignment() {
@@ -54,13 +56,41 @@ export default function AssignmentDetailPage() {
         }
       } catch (error) {
         console.error("Error fetching assignment:", error);
-      
+
+        setError("Failed to load assignment details. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function fetchSubmission() {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `${baseUrl}/user/assignment/${id}/checksubmission`,
+          {
+            withCredentials: true,
+          }
+        );
+        if (response.data.success || response.data.isAssignmentSubmitted) {
+          // Use the files from the response if available
+          if (response.data.files) {
+            setFiles(response.data.files);
+          }
+          // Check if the assignment has already been submitted
+          if (response.data.isAssignmentSubmitted) {
+            setSubmitted(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching assignment:", error);
         setError("Failed to load assignment details. Please try again later.");
       } finally {
         setLoading(false);
       }
     }
     fetchAssignment();
+    fetchSubmission();
   }, [id]);
 
   const handleFileChange = (e) => {
@@ -79,7 +109,7 @@ export default function AssignmentDetailPage() {
   const handleSubmit = async () => {
     if (files.length === 0) {
       toast.error("Please upload at least one file before submitting.");
-      
+
       return;
     }
 
@@ -89,9 +119,16 @@ export default function AssignmentDetailPage() {
       const formData = new FormData();
       files.forEach((file) => formData.append("files", file));
 
-      await axios.post(`${baseUrl}/user/assignment/${id}/submit`, formData, {
-        withCredentials: true,
-      });
+      const response = await axios.post(
+        `${baseUrl}/user/assignment/${id}/submit`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       setSubmitted(true);
     } catch (error) {
       console.error("Error submitting assignment:", error);
@@ -211,6 +248,10 @@ export default function AssignmentDetailPage() {
       </div>
     );
   }
+
+  const openPreviewModal = () => {
+    setPreviewModalOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -348,9 +389,17 @@ export default function AssignmentDetailPage() {
                         </p>
 
                         <div className="bg-white rounded-lg border border-green-100 p-3">
-                          <h4 className="text-sm font-medium text-green-800 mb-2">
-                            Submitted files:
-                          </h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-sm font-medium text-green-800">
+                              Submitted files:
+                            </h4>
+                            <button
+                              onClick={openPreviewModal}
+                              className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                            >
+                              Preview Files
+                            </button>
+                          </div>
                           <ul className="space-y-2">
                             {files.map((file, index) => (
                               <li
@@ -476,6 +525,12 @@ export default function AssignmentDetailPage() {
           </div>
         </div>
       </main>
+      {/* File Preview Modal */}
+      <FilePreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        files={files}
+      />
       <Footer />
     </div>
   );
